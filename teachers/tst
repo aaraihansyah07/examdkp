@@ -1,0 +1,241 @@
+CREATE OR REPLACE TRIGGER POS.MST_DOKTOR_TRG
+BEFORE INSERT OR UPDATE
+ON POS.MST_DOKTOR
+REFERENCING NEW AS NEW OLD AS OLD
+FOR EACH ROW
+DECLARE  vtmp number; 
+ANUM VARCHAR2(30); 
+V_GENDER NUMBER;
+V_ACTIVE NUMBER;
+V_PROCEDURE_NAME VARCHAR2(500);
+BEGIN  
+    IF INSERTING THEN  
+/*                       POS.AUTONUM_GIT('DOC'||:NEW.OSL1||:NEW.OSL2||:NEW.OSL3||:NEW.OSL4,'',
+                      TO_CHAR(sysdate,'YYYY'),TO_CHAR(sysdate,'MM'),TO_CHAR(sysdate,'DD'),
+                      :NEW.OSL1,:NEW.OSL2,:NEW.OSL3,:NEW.OSL4,ANUM);
+*/  SELECT MAX(LPAD(DOKTOR_ID,3,0))+1  INTO ANUM FROM POS.MST_DOKTOR;                      
+        :NEW.DOKTOR_ID := ANUM;
+        :NEW.DTUSR := SYSDATE;  
+        :NEW.ENTUSR   := CASE WHEN  v('APP_USER') IS  NULL THEN SYS_CONTEXT ('USERENV', 'TERMINAL') ELSE  'MI-'|| v('APP_USER')  END;  
+        
+        IF GIT_ERP.CHECK_STATUS_AIDO = 'OL' THEN
+            IF :NEW.MAPPING_FROM_AIDO IS NULL OR :NEW.MAPPING_FROM_AIDO = 'N' THEN
+                IF :NEW.INSERT_FROM IS NULL THEN
+                    BEGIN
+                        SELECT TO_NUMBER(DECODE(:NEW.GENDER,'L',1,'P',2))
+                        INTO V_GENDER FROM DUAL;
+                    
+                        GIT_ERP.CREATE_DOCTOR(
+                            :NEW.OSL1,
+                            :NEW.OSL2,
+                            :NEW.OSL3,
+                            :NEW.USERID,
+                            :NEW.USERID,
+                            :NEW.USERNAME_AIDO,
+                            :NEW.PASSWORD_AIDO,
+                            :NEW.DOKTOR_NM,
+                            :NEW.NIK,
+                            :NEW.EMAIL,
+                            :NEW.PHONE_HOME,
+                            :NEW.EMPCODE,
+                            V_GENDER,
+                            :NEW.ID_AIDO
+                        );
+                        
+                        
+                        
+             
+                    EXCEPTION WHEN OTHERS THEN
+                        RAISE;
+                    END;
+                              
+                END IF;
+            END IF;
+        ELSIF GIT_ERP.CHECK_STATUS_AIDO = 'OF' THEN
+            IF :NEW.MAPPING_FROM_AIDO IS NULL OR :NEW.MAPPING_FROM_AIDO = 'N' THEN
+                IF :NEW.INSERT_FROM IS NULL THEN
+                    BEGIN
+                        V_PROCEDURE_NAME := 'GIT_ERP.CREATE_DOCTOR';
+                        
+                        SELECT TO_NUMBER(DECODE(:NEW.GENDER,'L',1,'P',2))
+                        INTO V_GENDER FROM DUAL;
+                    
+                        INSERT INTO GIT_LOG_API.LOG_OFF_API_EXEC
+                        (PROC_NAME, BODY_API, PROC_PRIORITY, TRX_NUM)
+                        VALUES 
+                        (v_procedure_name, ''''||:NEW.OSL1||''''||',' 
+                                           ||''''||:NEW.OSL2||''''||',' 
+                                           ||''''||:NEW.OSL3||''''||',' 
+                                           ||''''||:NEW.USERID||''''||',' 
+                                           ||''''||:NEW.USERID||''''||',' 
+                                           ||''''||:NEW.USERNAME_AIDO||''''||',' 
+                                           ||''''||:NEW.PASSWORD_AIDO||''''||',' 
+                                           ||''''||:NEW.DOKTOR_NM||''''||',' 
+                                           ||:NEW.NIK||',' 
+                                           ||''''||:NEW.EMAIL||''''||',' 
+                                           ||:NEW.PHONE_HOME||',' 
+                                           ||''''||:NEW.EMPCODE||''''||',' 
+                                           ||V_GENDER||',' 
+                                           ||''''||:NEW.ID_AIDO||''''
+                                           , 7 , :NEW.DOKTOR_ID
+                        );
+                    EXCEPTION WHEN OTHERS THEN
+                        RAISE;
+                    END;
+                              
+                END IF;
+            END IF;
+        :NEW.PASSWORD_AIDO := GIT_ERP.GIT_F_ENCRYPT(:NEW.PASSWORD_AIDO);
+    ELSIF UPDATING THEN  
+        :NEW.DTUPD := SYSDATE;  
+        :NEW.UPDUSR   := CASE WHEN  v('APP_USER') IS  NULL THEN SYS_CONTEXT ('USERENV', 'TERMINAL') ELSE  'MI-'|| v('APP_USER')  END;  
+        
+        IF GIT_ERP.CHECK_STATUS_AIDO = 'OL' THEN
+            IF :NEW.MAPPING_FROM_AIDO IS NULL OR :NEW.MAPPING_FROM_AIDO = 'N' THEN
+                BEGIN
+                    SELECT TO_NUMBER(DECODE(:NEW.GENDER,'L',1,'P',2))
+                    INTO V_GENDER FROM DUAL;
+                    
+                    SELECT TO_NUMBER(:NEW.STACT)
+                    INTO V_ACTIVE FROM DUAL;
+                
+                    IF :OLD.ID_AIDO IS NULL THEN
+                    
+                        IF :NEW.INSERT_FROM IS NULL THEN
+                            GIT_ERP.CREATE_DOCTOR(
+                                :NEW.OSL1,
+                                :NEW.OSL2,
+                                :NEW.OSL3,
+                                :NEW.USERID,
+                                :NEW.USERID,
+                                :NEW.USERNAME_AIDO,
+                                :NEW.PASSWORD_AIDO,
+                                :NEW.DOKTOR_NM,
+                                :NEW.NIK,
+                                :NEW.EMAIL,
+                                :NEW.PHONE_HOME,
+                                :NEW.EMPCODE,
+                                V_GENDER,
+                                :NEW.ID_AIDO
+                            );
+                                    
+                        END IF;
+                    ELSE
+                    
+                    GIT_ERP.UPDATE_DOCTOR(
+                              :NEW.OSL1 
+                            , :NEW.OSL2 
+                            , :NEW.OSL3 
+                            , :NEW.USERID
+                            , :NEW.USERID
+                            , :NEW.USERNAME_AIDO 
+                            , :NEW.PASSWORD_AIDO 
+                            , :NEW.DOKTOR_NM 
+                            , :NEW.NIK 
+                            , :NEW.EMAIL 
+                            , :NEW.PHONE_HOME 
+                            , :NEW.EMPCODE 
+                            , V_GENDER 
+                            , :NEW.ID_AIDO 
+                            , V_ACTIVE
+                            );
+                                        
+                    END IF;
+                    
+                EXCEPTION
+                    WHEN OTHERS THEN
+                        -- Handle the exception (log it, re-raise it, or handle it otherwise)
+                        RAISE;
+                END;
+                  
+            END IF;
+        ELSIF GIT_ERP.CHECK_STATUS_AIDO = 'OF' THEN
+            IF :NEW.MAPPING_FROM_AIDO IS NULL OR :NEW.MAPPING_FROM_AIDO = 'N' THEN
+                BEGIN
+                    SELECT TO_NUMBER(DECODE(:NEW.GENDER,'L',1,'P',2))
+                    INTO V_GENDER FROM DUAL;
+                    
+                    SELECT TO_NUMBER(:NEW.STACT)
+                    INTO V_ACTIVE FROM DUAL;
+                
+                    IF :NEW.ID_AIDO IS NULL THEN
+                    
+                        IF :NEW.INSERT_FROM IS NULL THEN
+                            V_PROCEDURE_NAME := 'GIT_ERP.CREATE_DOCTOR';
+                                            
+                            INSERT INTO GIT_LOG_API.LOG_OFF_API_EXEC
+                            (PROC_NAME, BODY_API, PROC_PRIORITY, TRX_NUM)
+                            VALUES 
+                            (v_procedure_name, ''''||:NEW.OSL1||''''||',' 
+                                               ||''''||:NEW.OSL2||''''||',' 
+                                               ||''''||:NEW.OSL3||''''||',' 
+                                               ||''''||:NEW.USERID||''''||',' 
+                                               ||''''||:NEW.USERID||''''||',' 
+                                               ||''''||:NEW.USERNAME_AIDO||''''||',' 
+                                               ||''''||:NEW.PASSWORD_AIDO||''''||',' 
+                                               ||''''||:NEW.DOKTOR_NM||''''||',' 
+                                               ||:NEW.NIK||',' 
+                                               ||''''||:NEW.EMAIL||''''||',' 
+                                               ||:NEW.PHONE_HOME||',' 
+                                               ||''''||:NEW.EMPCODE||''''||',' 
+                                               ||V_GENDER||',' 
+                                               ||''''||:NEW.ID_AIDO||''''
+                                               , 7 , :NEW.DOKTOR_ID
+                            );
+                                    
+                        END IF;
+                    ELSE
+                        V_PROCEDURE_NAME := 'GIT_ERP.UPDATE_DOCTOR';
+                                            
+                        INSERT INTO GIT_LOG_API.LOG_OFF_API_EXEC
+                        (PROC_NAME, BODY_API, PROC_PRIORITY, TRX_NUM)
+                        VALUES 
+                        (v_procedure_name, ''''||:NEW.OSL1||''''||',' 
+                                           ||''''||:NEW.OSL2||''''||',' 
+                                           ||''''||:NEW.OSL3||''''||',' 
+                                           ||''''||:NEW.USERID||''''||',' 
+                                           ||''''||:NEW.USERID||''''||',' 
+                                           ||''''||:NEW.USERNAME_AIDO||''''||',' 
+                                           ||''''||:NEW.PASSWORD_AIDO||''''||',' 
+                                           ||''''||:NEW.DOKTOR_NM||''''||',' 
+                                           ||:NEW.NIK||',' 
+                                           ||''''||:NEW.EMAIL||''''||',' 
+                                           ||:NEW.PHONE_HOME||',' 
+                                           ||''''||:NEW.EMPCODE||''''||',' 
+                                           ||V_GENDER||',' 
+                                           ||''''||:NEW.ID_AIDO||''''||','
+                                           ||V_ACTIVE
+                                           , 8 , :NEW.DOKTOR_ID
+                        );
+                                        
+                    END IF;
+                    
+                EXCEPTION
+                    WHEN OTHERS THEN
+                        -- Handle the exception (log it, re-raise it, or handle it otherwise)
+                        RAISE;
+                END;
+                  
+            END IF;
+        END IF;
+        if :NEW.PASSWORD_AIDO <> :OLD.PASSWORD_AIDO then
+                :NEW.PASSWORD_AIDO := GIT_ERP.GIT_F_ENCRYPT(:NEW.PASSWORD_AIDO); 
+        end if;
+    END IF;  
+    END IF;
+     
+    If :NEW.STACT = 'Y' then
+       :NEW.DTACT := sysdate;
+       :NEW.USRACTVT   := CASE WHEN  v('APP_USER') IS  NULL THEN SYS_CONTEXT ('USERENV', 'TERMINAL') ELSE  'MI-'|| v('APP_USER')  END;
+    End if;
+    If :NEW.STACT = 'N' then
+       :NEW.DTINACT := sysdate;
+       :NEW.USRINACTVT   := CASE WHEN  v('APP_USER') IS  NULL THEN SYS_CONTEXT ('USERENV', 'TERMINAL') ELSE  'MI-'|| v('APP_USER')  END;
+    End if;
+
+EXCEPTION  
+  WHEN OTHERS THEN RAISE;
+END;
+/
+SHOW ERRORS;
+/

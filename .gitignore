@@ -1,0 +1,84 @@
+
+/generated/prisma
+#CREATE EXTENSION IF NOT EXISTS pgcrypto;
+#SELECT crypt('1234', gen_salt('bf'));
+
+
+# CREATE OR REPLACE PROCEDURE sp_generate_akun_siswa()
+# LANGUAGE plpgsql
+# AS $$
+# DECLARE
+#     siswa RECORD;
+#     password_raw TEXT;
+#     password_hashed TEXT;
+# BEGIN
+#     FOR siswa IN SELECT * FROM d_siswa LOOP
+#         -- Cek apakah user sudah ada
+#         IF NOT EXISTS (
+#             SELECT 1 FROM users WHERE uname = siswa.nis
+#         ) THEN
+#             -- Ambil tanggal lahir dan hash
+#             password_raw := to_char(siswa.tanggal_lahir, 'YYYY-MM-DD');
+#             password_hashed := crypt(password_raw, gen_salt('bf'));
+
+#             -- Insert user
+#             INSERT INTO users(uname, pwd, role, fname, st_generate)
+#             VALUES (siswa.nis, password_hashed, '2', siswa.nama_siswa, 'Y');
+#         END IF;
+#     END LOOP;
+# END;
+# $$
+
+
+
+# CREATE OR REPLACE FUNCTION generate_kode_guru()
+# RETURNS TRIGGER AS $$
+# DECLARE
+#     last_number integer;
+#     new_number text;
+# BEGIN
+#     -- Ambil 3 digit terakhir dari kode_guru terbesar
+#     SELECT COALESCE(
+#         MAX(CAST(SUBSTRING(kode_guru FROM 8 FOR 3) AS INTEGER)),
+#         0
+#     )
+#     INTO last_number
+#     FROM d_guru;
+
+#     -- Tambahkan 1
+#     new_number := LPAD((last_number + 1)::text, 3, '0');
+
+#     -- Set nilai kode_guru dengan format GSMADKPxxx
+#     NEW.kode_guru := 'GSMADKP' || new_number;
+
+#     RETURN NEW;
+# END;
+# $$ LANGUAGE plpgsql;
+
+
+
+# CREATE TRIGGER trg_generate_kode_guru
+# BEFORE INSERT ON d_guru
+# FOR EACH ROW
+# EXECUTE FUNCTION generate_kode_guru();
+
+#BACKUP DATABASE POSTGRESQL DARI CMD :
+#pg_dump -U postgres -F p -f backup_db_exam.sql db_exam
+
+# PROCEDURE DELETE DATA TEST
+# DELETE FROM F_JAWABAN_SISWA_DTL WHERE ID_JAWABAN_SISWA IN (
+# SELECT ID_JAWABAN_SISWA FROM F_JAWABAN_SISWA_HDR WHERE ID_UJIAN_HDR IN (
+# SELECT ID_UJIAN_HDR	
+# FROM public.f_soal_hdr where kode_guru = 'GSMADKP084'
+# ));
+
+# DELETE FROM F_JAWABAN_SISWA_HDR WHERE ID_UJIAN_HDR IN (
+# SELECT ID_UJIAN_HDR	
+# FROM public.f_soal_hdr where kode_guru = 'GSMADKP084');
+
+# DELETE FROM F_SOAL_DTL WHERE ID_UJIAN_HDR IN (
+# SELECT ID_UJIAN_HDR	
+# FROM public.f_soal_hdr where kode_guru = 'GSMADKP084');
+
+# DELETE FROM F_SOAL_HDR WHERE KODE_GURU = 'GSMADKP084';
+node_modules

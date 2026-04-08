@@ -1,0 +1,282 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model users {
+  uuiduser    String    @id @default(dbgenerated("gen_random_uuid()")) @db.VarChar(40)
+  uname       String    @unique(map: "uq_uname") @db.VarChar(50)
+  pword       String    @db.VarChar(100)
+  fname       String?   @db.VarChar(100)
+  role        String?   @db.VarChar(5)
+  nis         String?   @db.VarChar(10)
+  nip         String?   @db.VarChar(20)
+  st_generate String?   @db.VarChar(5)
+  createdate  DateTime? @default(now()) @db.Timestamp(6)
+  updatedate  DateTime? @db.Timestamp(6)
+  updateuser  String?   @db.VarChar(50)
+  createuser  String?   @db.VarChar(50)
+  kode_guru   String?   @db.VarChar(20)
+  d_guru      d_guru?   @relation(fields: [kode_guru], references: [kode_guru], onDelete: NoAction, onUpdate: NoAction, map: "fk_kode_guru")
+  d_siswa     d_siswa?  @relation(fields: [nis], references: [nis], onDelete: NoAction, onUpdate: NoAction, map: "fk_nis")
+}
+
+model d_guru {
+  uuidguru                                                          String                    @id @default(dbgenerated("gen_random_uuid()")) @db.VarChar(40)
+  nama_guru                                                         String                    @db.VarChar(100)
+  gender                                                            String?                   @db.VarChar(5)
+  tanggal_lahir                                                     DateTime?                 @db.Date
+  tempat_lahir                                                      String?                   @db.VarChar(20)
+  nip                                                               String?                   @db.VarChar(20)
+  kode_mata_pelajaran                                               String?                   @db.VarChar(20)
+  kode_guru                                                         String?                   @unique(map: "uq_kode_guru") @db.VarChar(20)
+  d_mata_pelajaran                                                  d_mata_pelajaran?         @relation(fields: [kode_mata_pelajaran], references: [kode_mata_pelajaran], onDelete: NoAction, onUpdate: NoAction, map: "fk_kode_mapel_guru")
+  d_penempatan_mapel_guru_d_penempatan_mapel_guru_kode_guruTod_guru d_penempatan_mapel_guru[] @relation("d_penempatan_mapel_guru_kode_guruTod_guru")
+  d_penempatan_mapel_guru                                           d_penempatan_mapel_guru[]
+  f_jawaban_siswa_hdr                                               f_jawaban_siswa_hdr[]
+  f_soal_hdr_f_soal_hdr_kode_guruTod_guru                           f_soal_hdr[]              @relation("f_soal_hdr_kode_guruTod_guru")
+  f_soal_hdr_f_soal_hdr_uuidguruTod_guru                            f_soal_hdr[]              @relation("f_soal_hdr_uuidguruTod_guru")
+  users                                                             users[]
+}
+
+model d_kelas {
+  id                  Int                   @id @default(autoincrement())
+  kode_kelas          String?               @unique(map: "uq_kode_kelas") @db.VarChar(10)
+  nama_kelas          String?               @unique(map: "uq_nama_kelas") @db.VarChar(10)
+  d_penempatan_siswa  d_penempatan_siswa[]
+  d_subkelas          d_subkelas[]
+  f_jawaban_siswa_hdr f_jawaban_siswa_hdr[]
+  f_soal_hdr          f_soal_hdr[]
+}
+
+model d_mata_pelajaran {
+  id                      Int                       @id @default(autoincrement())
+  nama_mata_pelajaran     String?                   @unique(map: "uq_nama_mapel") @db.VarChar(50)
+  kode_mata_pelajaran     String?                   @unique(map: "uq_kode_mapel") @db.VarChar(10)
+  d_guru                  d_guru[]
+  d_penempatan_mapel_guru d_penempatan_mapel_guru[]
+  d_ujian                 d_ujian[]
+  f_soal_hdr              f_soal_hdr[]
+}
+
+model d_penempatan_mapel_guru {
+  uuidguru                                         String?           @db.VarChar(40)
+  uuidpenempatanmapel                              String            @id @default(dbgenerated("gen_random_uuid()")) @db.VarChar(40)
+  kode_mata_pelajaran                              String?           @db.VarChar(10)
+  kode_guru                                        String?           @db.VarChar(20)
+  d_guru_d_penempatan_mapel_guru_kode_guruTod_guru d_guru?           @relation("d_penempatan_mapel_guru_kode_guruTod_guru", fields: [kode_guru], references: [kode_guru], onDelete: NoAction, onUpdate: NoAction, map: "fk_kode_guru_penempatan_mapel")
+  d_mata_pelajaran                                 d_mata_pelajaran? @relation(fields: [kode_mata_pelajaran], references: [kode_mata_pelajaran], onDelete: NoAction, onUpdate: NoAction, map: "fk_kode_mata_pelajaran")
+  d_guru                                           d_guru?           @relation(fields: [uuidguru], references: [uuidguru], onDelete: NoAction, onUpdate: NoAction, map: "fk_uuidguru")
+}
+
+model d_penempatan_siswa {
+  uuidpenempatansiswa String          @id @db.VarChar(40)
+  uuidsiswa           String?         @db.VarChar(40)
+  nama_siswa          String?         @db.VarChar(100)
+  kode_tahun_ajaran   String?         @db.VarChar(10)
+  id_kelas            Int?
+  id_subkelas         Int?
+  d_subkelas          d_subkelas?     @relation(fields: [id_subkelas], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_id_subkelas_penempatan_siswa")
+  d_kelas             d_kelas?        @relation(fields: [id_kelas], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_kelas_penempatan_siswa")
+  d_tahun_ajaran      d_tahun_ajaran? @relation(fields: [kode_tahun_ajaran], references: [kode_tahun_ajaran], onDelete: NoAction, onUpdate: NoAction, map: "fk_kode_tahun_ajaran")
+
+  @@unique([uuidsiswa, kode_tahun_ajaran, id_kelas, id_subkelas], map: "uq_penempatan_siswa")
+}
+
+model d_siswa {
+  uuidsiswa                                            String                @id @default(dbgenerated("gen_random_uuid()")) @db.VarChar(40)
+  nama_siswa                                           String                @db.VarChar(100)
+  gender                                               String                @db.VarChar(5)
+  nis                                                  String                @unique(map: "uq_nis") @db.VarChar(10)
+  tanggal_lahir                                        DateTime?             @db.Date
+  tempat_lahir                                         String?               @db.VarChar(20)
+  st_active                                            String?               @db.VarChar(5)
+  id_kelas                                             Int?
+  id_subkelas                                          Int?
+  kode_tahun_ajaran                                    String?               @db.VarChar(10)
+  nisn                                                 String                @db.VarChar(20)
+  f_jawaban_siswa_hdr_f_jawaban_siswa_hdr_nisTod_siswa f_jawaban_siswa_hdr[] @relation("f_jawaban_siswa_hdr_nisTod_siswa")
+  f_jawaban_siswa_hdr                                  f_jawaban_siswa_hdr[]
+  users                                                users[]
+}
+
+model d_subkelas {
+  id                  Int                   @id @default(autoincrement())
+  kode_subkelas       String?               @db.VarChar(10)
+  nama_subkelas       String?               @unique(map: "uq_nama_subkelas") @db.VarChar(10)
+  id_kelas            Int?
+  urutan              Int?
+  d_penempatan_siswa  d_penempatan_siswa[]
+  d_kelas             d_kelas?              @relation(fields: [id_kelas], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_kelas")
+  f_jawaban_siswa_hdr f_jawaban_siswa_hdr[]
+  f_soal_hdr          f_soal_hdr[]
+}
+
+model d_tahun_ajaran {
+  kode_tahun_ajaran  String               @id @db.VarChar(10)
+  nama_tahun_ajaran  String?              @db.VarChar(30)
+  keterangan         String?              @db.VarChar(100)
+  d_penempatan_siswa d_penempatan_siswa[]
+  d_ujian            d_ujian[]
+}
+
+model d_ujian {
+  id_ujian                                  Int               @id @default(autoincrement())
+  nama_ujian                                String?           @db.VarChar(150)
+  deskripsi                                 String?           @db.VarChar(200)
+  semester                                  String?           @db.VarChar(5)
+  kode_tahun_ajaran                         String?           @db.VarChar(10)
+  kode_ujian                                String?           @unique(map: "uq_ujian") @db.VarChar(30)
+  jenis_ujian                               String?           @db.VarChar(10)
+  kode_mata_pelajaran                       String?           @db.VarChar(10)
+  d_jenis_ujian                             d_jenis_ujian?    @relation(fields: [jenis_ujian], references: [kode_jenis_ujian], onDelete: NoAction, onUpdate: NoAction, map: "fk_jenis_ujian")
+  d_mata_pelajaran                          d_mata_pelajaran? @relation(fields: [kode_mata_pelajaran], references: [kode_mata_pelajaran], onDelete: NoAction, onUpdate: NoAction, map: "fk_mapel_jenis_ujian")
+  d_tahun_ajaran                            d_tahun_ajaran?   @relation(fields: [kode_tahun_ajaran], references: [kode_tahun_ajaran], onDelete: NoAction, onUpdate: NoAction, map: "fk_tahun_ajaran_jenis_ujian")
+  f_soal_hdr_f_soal_hdr_id_ujianTod_ujian   f_soal_hdr[]      @relation("f_soal_hdr_id_ujianTod_ujian")
+  f_soal_hdr_f_soal_hdr_kode_ujianTod_ujian f_soal_hdr[]      @relation("f_soal_hdr_kode_ujianTod_ujian")
+
+  @@unique([semester, kode_tahun_ajaran, jenis_ujian, kode_mata_pelajaran], map: "uq_combination_ujian")
+}
+
+model f_soal_dtl {
+  seq_soal_dtl         Int        @id @default(autoincrement())
+  option_a             String
+  option_b             String
+  option_c             String
+  option_d             String
+  option_e             String
+  no_soal              Int
+  id_ujian_hdr         Int
+  isi_soal             String
+  gambar_soal_filename String?    @db.VarChar(200)
+  kunci_jawaban        String     @db.VarChar(5)
+  nilai                Decimal?   @db.Decimal
+  isi_soal_unicode     String?
+  option_a_unicode     String?
+  option_b_unicode     String?
+  option_c_unicode     String?
+  option_d_unicode     String?
+  option_e_unicode     String?
+  f_soal_hdr           f_soal_hdr @relation(fields: [id_ujian_hdr], references: [id_ujian_hdr], onDelete: NoAction, onUpdate: NoAction, map: "fk_id_ujian_hdr")
+
+  @@index([id_ujian_hdr], map: "idx_f_soal_dtl_hdr")
+}
+
+model f_soal_hdr {
+  id_ujian_hdr                           Int                   @id @default(autoincrement())
+  id_ujian                               Int
+  kode_ujian                             String?               @db.VarChar(50)
+  id_kelas                               Int?
+  id_subkelas                            Int?
+  st_posting                             String?               @db.VarChar(5)
+  waktu_mulai                            DateTime?             @db.Timestamp(6)
+  waktu_berakhir                         DateTime?             @db.Timestamp(6)
+  nama_bab                               String?               @db.VarChar(200)
+  createuser                             String?               @db.VarChar(100)
+  createdate                             DateTime?             @default(now()) @db.Timestamp(6)
+  updateuser                             String?               @db.VarChar(100)
+  updatedate                             DateTime?             @db.Timestamp(6)
+  uuidguru                               String?               @db.VarChar(50)
+  kode_guru                              String?               @db.VarChar(20)
+  kode_mata_pelajaran                    String?               @db.VarChar(20)
+  durasi                                 Decimal?              @db.Decimal
+  userposting                            String?               @db.VarChar(100)
+  token                                  String?               @unique(map: "uq_token") @db.VarChar(7)
+  st_nonaktif_token                      String?               @db.VarChar(5)
+  tanggal_ujian                          DateTime?             @db.Date
+  soal_acak                              String?               @db.VarChar(5)
+  option_acak                            String?               @db.VarChar(5)
+  st_susulan                             String?               @db.VarChar(10)
+  st_nonaktif_ujian                      String?               @db.VarChar(10)
+  f_jawaban_siswa_hdr                    f_jawaban_siswa_hdr[]
+  f_soal_dtl                             f_soal_dtl[]
+  d_kelas                                d_kelas?              @relation(fields: [id_kelas], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_id_kelas_soal")
+  d_subkelas                             d_subkelas?           @relation(fields: [id_subkelas], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_id_subkelas_soal")
+  d_ujian_f_soal_hdr_id_ujianTod_ujian   d_ujian               @relation("f_soal_hdr_id_ujianTod_ujian", fields: [id_ujian], references: [id_ujian], onDelete: NoAction, onUpdate: NoAction, map: "fk_id_ujian")
+  d_guru_f_soal_hdr_kode_guruTod_guru    d_guru?               @relation("f_soal_hdr_kode_guruTod_guru", fields: [kode_guru], references: [kode_guru], onDelete: NoAction, onUpdate: NoAction, map: "fk_kode_guru_hdr_soal")
+  d_mata_pelajaran                       d_mata_pelajaran?     @relation(fields: [kode_mata_pelajaran], references: [kode_mata_pelajaran], onDelete: NoAction, onUpdate: NoAction, map: "fk_kode_mata_pelajaran_hdr_soal")
+  d_ujian_f_soal_hdr_kode_ujianTod_ujian d_ujian?              @relation("f_soal_hdr_kode_ujianTod_ujian", fields: [kode_ujian], references: [kode_ujian], onDelete: NoAction, onUpdate: NoAction, map: "fk_kode_ujian_soal")
+  d_guru_f_soal_hdr_uuidguruTod_guru     d_guru?               @relation("f_soal_hdr_uuidguruTod_guru", fields: [uuidguru], references: [uuidguru], onDelete: NoAction, onUpdate: NoAction, map: "fk_uuid_guru_hdr_soal")
+
+  @@unique([id_ujian, id_kelas, id_subkelas, nama_bab, kode_mata_pelajaran, st_susulan], map: "uq_sooal_hdr2")
+  @@index([id_ujian], map: "idx_f_soal_hdr_idujian")
+  @@index([token], map: "idx_f_soal_hdr_token")
+}
+
+model f_jawaban_siswa_dtl {
+  seq_jawaban_siswa_dtl Int                  @id @default(autoincrement())
+  id_jawaban_siswa      Int?
+  no_soal               Int?
+  kunci_jawaban         String?              @db.VarChar(50)
+  nilai                 Decimal?             @db.Decimal
+  jawaban_siswa         String?              @db.VarChar(50)
+  f_jawaban_siswa_hdr   f_jawaban_siswa_hdr? @relation(fields: [id_jawaban_siswa], references: [id_jawaban_siswa], onDelete: NoAction, onUpdate: NoAction, map: "fk_jawaban_siswa")
+
+  @@unique([id_jawaban_siswa, no_soal], map: "uq_jawaban_siswa_dtl")
+  @@index([id_jawaban_siswa], map: "idx_dtl_id_hdr")
+  @@index([no_soal], map: "idx_dtl_no_soal")
+}
+
+model f_jawaban_siswa_hdr {
+  id_jawaban_siswa                         Int                   @id @default(autoincrement())
+  uuidsiswa                                String?               @db.VarChar(40)
+  id_ujian_hdr                             Int?
+  id_kelas                                 Int?
+  id_subkelas                              Int?
+  kode_mata_pelajaran                      String?               @db.VarChar(20)
+  uuidguru                                 String?               @db.VarChar(40)
+  nis                                      String?               @db.VarChar(20)
+  st_selesai                               String?               @db.VarChar(5)
+  pelanggaran_count                        Int?
+  f_jawaban_siswa_dtl                      f_jawaban_siswa_dtl[]
+  d_guru                                   d_guru?               @relation(fields: [uuidguru], references: [uuidguru], onDelete: NoAction, onUpdate: NoAction, map: "fk_guru_jawaban_siswa")
+  d_kelas                                  d_kelas?              @relation(fields: [id_kelas], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_kelas_jawaban_siswa")
+  d_siswa_f_jawaban_siswa_hdr_nisTod_siswa d_siswa?              @relation("f_jawaban_siswa_hdr_nisTod_siswa", fields: [nis], references: [nis], onDelete: NoAction, onUpdate: NoAction, map: "fk_nis_jawaban_siswa")
+  d_siswa                                  d_siswa?              @relation(fields: [uuidsiswa], references: [uuidsiswa], onDelete: NoAction, onUpdate: NoAction, map: "fk_siswa_jawaban_siswa")
+  d_subkelas                               d_subkelas?           @relation(fields: [id_subkelas], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_subkelas_jawaban_siswa")
+  f_soal_hdr                               f_soal_hdr?           @relation(fields: [id_ujian_hdr], references: [id_ujian_hdr], onDelete: NoAction, onUpdate: NoAction, map: "fk_ujian_jawaban_siswa")
+
+  @@index([id_ujian_hdr], map: "idx_hdr_id_ujian_hdr")
+  @@index([uuidsiswa], map: "idx_hdr_uuidsiswa")
+}
+
+model d_jenis_ujian {
+  kode_jenis_ujian String    @id @db.VarChar(30)
+  nama_jenis_ujian String?   @db.VarChar(100)
+  keterangan       String?   @db.VarChar(300)
+  d_ujian          d_ujian[]
+}
+
+model d_parameter_ujian {
+  jatah_pelanggaran     Decimal   @db.Decimal
+  durasi_toleransi_idle Decimal   @db.Decimal
+  id_param              Int       @id
+  updatedate            DateTime? @db.Timestamp(6)
+  updateuser            String?   @db.VarChar(100)
+}
+
+model f_absensi_guru {
+  id_absensi    Int       @id @default(autoincrement())
+  kode_guru     String?   @db.VarChar(30)
+  tanggal       DateTime? @db.Date
+  waktu_absensi DateTime? @db.Timestamp(6)
+
+  @@unique([kode_guru, tanggal], map: "uq_absensi_guru")
+}
+
+model f_absensi_siswa {
+  id_absensi    Int       @id @default(autoincrement())
+  id_kelas      Int?
+  id_subkelas   Int?
+  nis           String?   @db.VarChar(30)
+  tanggal       DateTime? @db.Date
+  waktu_absensi DateTime? @db.Timestamp(6)
+  ip_address    String?   @db.VarChar(50)
+
+  @@unique([nis, tanggal], map: "uq_absensi")
+}

@@ -1,0 +1,29 @@
+sman1dkpcrb
+@Sman1dkpcirebon
+
+zonanyaman@upi.edu
+Root pw : @Sman1dkpcrb
+host vps : srv1007450.hstgr.cloud
+iP : 31.97.187.165
+port : 22
+
+ssh : ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDgbtXNgpOG+75lZ4wedAyxrwOj8UofEb6G6Tu+9L25P zonanyaman@upi.edu
+paraprase : smadkp
+
+$smadkp
+------------------------------------------
+NOW : (SETAHUN, S.D 18 FEB 2027) :
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGIkHVjYM1yhgcNXiTCyWHfLwq9P2dopFYLVydPe+CuM asus@DESKTOP-0GV7PJG
+
+Akun Server VPS medsos dpk :
+ssh root@76.13.197.109
+Root password : @Sman1DkptgCrb
+Port : 22
+
+DB POSTGRESQL :
+User : db_exam_user
+Pw   : password_bebas
+
+Terkait isue :
+- Tidak bisa upload/download excel -> instal beberapa tools php 8.3
+- Tidak bisa upload gambar soal -> lakukan chmod dan chown folder uploads
