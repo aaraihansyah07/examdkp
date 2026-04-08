@@ -1,4 +1,1 @@
-Import the sql file into database which is located inside db folder to ensure site works properly.
-
-
-© 2021-2022 Azim Krishna All Rights Reserved
+Produk berupa sistem berbasis web untuk ujian siswa yang support digunakan 1200+ siswa dan sudah dipakai oleh salah satu SMA di Cirebon
